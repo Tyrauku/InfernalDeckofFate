@@ -267,6 +267,16 @@
         <p class="subtitle">Calculate energy requirements to reach 40,000 fate scrolls</p>
 
         <div class="input-section">
+            <h2>Current Progress</h2>
+            <div class="soulstone-inputs">
+                <div class="soulstone-input" style="border-left: 4px solid #FFD700;">
+                    <label for="currentPoints">Current Fate Scrolls (already earned)</label>
+                    <input type="number" id="currentPoints" min="0" value="0">
+                </div>
+            </div>
+        </div>
+
+        <div class="input-section">
             <h2>Tournament Planning - Gracchos Turn-Drake Fusion</h2>
             <p style="color: #cccccc; margin-bottom: 10px;">Four tournaments run during Infernal Deck of Fate. Select which ones you'll participate in and how much energy you'll spend.</p>
             <p style="color: #ff9999; font-size: 0.9em; margin-bottom: 20px; font-style: italic;">⚠️ Days/times shown are in EST. Please check the Plarium Play calendar to confirm exact timing for your timezone.</p>
@@ -578,6 +588,9 @@
         const STAGE_10_POINTS_PER_RUN = calculateExpectedPoints(STAGE_10_DROP_RATES, STAGE_10_POINTS);
         
         function updateCalculations() {
+            // Get current progress
+            const currentPoints = parseInt(document.getElementById('currentPoints').value) || 0;
+            
             // Get soulstone inputs
             const mortalCount = parseInt(document.getElementById('mortal').value) || 0;
             const immortalCount = parseInt(document.getElementById('immortal').value) || 0;
@@ -594,7 +607,7 @@
             const tournamentData = calculateTournamentContribution();
             
             // Calculate total points from all sources
-            const totalPointsFromOtherSources = soulstonePoints + tournamentData.points;
+            const totalPointsFromOtherSources = soulstonePoints + tournamentData.points + currentPoints;
             const remainingPoints = Math.max(0, TOTAL_POINTS_NEEDED - totalPointsFromOtherSources);
             
             // Calculate card flips based on total scrolls earned
@@ -680,6 +693,17 @@
                 count++;
             }
             
+            // Check Spider tournament
+            if (document.getElementById('spiderParticipate').checked) {
+                const energy = parseInt(document.getElementById('spiderEnergy').value) || 0;
+                const difficulty = document.querySelector('input[name="spiderDiff"]:checked').value;
+                const pointsPerEnergy = difficulty === '20N' ? stage20PointsPerEnergy : stage10PointsPerEnergy;
+                
+                totalEnergy += energy;
+                totalPoints += energy * pointsPerEnergy;
+                count++;
+            }
+            
             return {
                 energy: totalEnergy,
                 points: Math.floor(totalPoints),
@@ -687,7 +711,6 @@
             };
         }
         
-        // Show/hide tournament difficulty options
         function toggleTournamentOptions(tournamentName) {
             const checkbox = document.getElementById(tournamentName + 'Participate');
             const options = document.getElementById(tournamentName + 'Difficulty');
@@ -701,6 +724,7 @@
         }
         
         // Add event listeners
+        document.getElementById('currentPoints').addEventListener('input', updateCalculations);
         document.getElementById('mortal').addEventListener('input', updateCalculations);
         document.getElementById('immortal').addEventListener('input', updateCalculations);
         document.getElementById('eternal').addEventListener('input', updateCalculations);
@@ -709,11 +733,13 @@
         document.getElementById('dragonParticipate').addEventListener('change', () => toggleTournamentOptions('dragon'));
         document.getElementById('fireknightParticipate').addEventListener('change', () => toggleTournamentOptions('fireknight'));
         document.getElementById('kurosaParticipate').addEventListener('change', () => toggleTournamentOptions('kurosa'));
+        document.getElementById('spiderParticipate').addEventListener('change', () => toggleTournamentOptions('spider'));
         
         // Tournament energy and difficulty listeners
         document.getElementById('dragonEnergy').addEventListener('input', updateCalculations);
         document.getElementById('fireknightEnergy').addEventListener('input', updateCalculations);
         document.getElementById('kurosaEnergy').addEventListener('input', updateCalculations);
+        document.getElementById('spiderEnergy').addEventListener('input', updateCalculations);
         
         document.querySelectorAll('input[name="dragonDiff"]').forEach(radio => {
             radio.addEventListener('change', updateCalculations);
@@ -722,6 +748,9 @@
             radio.addEventListener('change', updateCalculations);
         });
         document.querySelectorAll('input[name="kurosaDiff"]').forEach(radio => {
+            radio.addEventListener('change', updateCalculations);
+        });
+        document.querySelectorAll('input[name="spiderDiff"]').forEach(radio => {
             radio.addEventListener('change', updateCalculations);
         });
         
